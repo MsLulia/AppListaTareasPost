@@ -1,31 +1,37 @@
-const http = require('http');
+onst http = require('http');
 const fs = require('fs');
-const path= require('path');
 
-http.createServer((req,res)=>){
+http.createServer((req, res) =>{
 
-	console.log(`${req.method} solicita ${req.url}`);
+    if(req.method == 'GET'){
+        res.writeHead(200, {'Content-Type': 'text/html'});
+        fs.createReadStream('./index.html', 'UTF-8').pipe(res);
+    }else if(req.method == 'POST'){
+        
+        let body = '';
 
-    if(req.url == '/'){
-        fs.readFile('./App/index.html', 'UTF-8', (err, html) =>{
+        req.on('data', chunk =>{body+= chunk;});
+
+        req.on('end', () =>{
             res.writeHead(200, {'Content-Type': 'text/html'});
-            res.end(html);
+            res.end(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width", user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <link rel="stylesheet" href="css/estilos.css">
+	<link rel="stylesheet" href="https://necolas.github.io/normalize.css/3.0.2/normalize.css">
+	<title>Lista de Tareas Resultados</title>
+</head>
+
+<body>
+	<h1>Formulario de listas datos</h1>
+	<p>${body}</p>
+</body>
+</html>
+            `);
         });
-    }else if(req.url.match(/.css$/)){
-        const reqPath = path.join(__dirname, 'public', req.url);
-        const fileStream = fs.createReadStream(reqPath, 'UTF-8');
-
-        res.writeHead(200, {'Content-Type': 'text/css'});
-        fileStream.pipe(res);
-    }else if(req.url.match(/.jpg$/)){
-        const reqPath = path.join(__dirname, 'public', req.url);
-        const fileStream = fs.createReadStream(reqPath);
-
-        res.writeHead(200, {'Content-Type': 'image/jpg'});
-        fileStream.pipe(res);
-    }else{
-        res.writeHead(404, {'Content-Type': 'text/plain'});
-        res.end('404 ERROR');
     }
 
 }).listen(3000);
